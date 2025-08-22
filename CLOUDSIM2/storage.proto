@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package storage;
+
+message NodeInfo {
+  string node_id = 1;
+  string host = 2;
+  int32 port = 3;
+  map<string, int64> capacity = 4;
+}
+
+message Status {
+  string message = 1;
+  bool success = 2;
+}
+
+message HeartbeatRequest {
+  string node_id = 1;
+}
+
+message HeartbeatResponse {
+  string status = 1;
+  repeated FileInfo pending_replications = 2;
+}
+
+message FileInfo {
+  string file_id = 1;
+  string file_name = 2;
+  int64 total_size = 3;
+  repeated FileChunk chunks = 4;
+}
+
+message FileChunk {
+  int32 chunk_id = 1;
+  int32 size = 2;
+  string checksum = 3;
+}
+
+message UploadRequest {
+  FileInfo file = 1;
+}
+
+message DownloadRequest {
+  string file_id = 1;
+}
+
+message DownloadResponse {
+  FileInfo file = 1;
+  string error = 2;
+}
+
+message ListFilesRequest {}
+
+message FileSummary {
+  string file_id = 1;
+  string file_name = 2;
+  int64 total_size = 3;
+}
+
+message ListFilesResponse {
+  repeated FileSummary files = 1;
+}
+
+service StorageService {
+  rpc Register(NodeInfo) returns (Status);
+  rpc ActiveNotification(HeartbeatRequest) returns (Status);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  rpc Upload(UploadRequest) returns (Status);
+  rpc Download(DownloadRequest) returns (DownloadResponse);
+  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+}
