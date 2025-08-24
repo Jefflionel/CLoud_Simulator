@@ -28,6 +28,7 @@ message FileInfo {
   string file_name = 2;
   int64 total_size = 3;
   repeated FileChunk chunks = 4;
+  double upload_timestamp = 5;
 }
 
 message FileChunk {
@@ -49,23 +50,14 @@ message DownloadResponse {
   string error = 2;
 }
 
-message ListFilesRequest {}
-
-message FileSummary {
-  string file_id = 1;
-  string file_name = 2;
-  int64 total_size = 3;
-}
-
-message ListFilesResponse {
-  repeated FileSummary files = 1;
-}
-
 service StorageService {
   rpc Register(NodeInfo) returns (Status);
   rpc ActiveNotification(HeartbeatRequest) returns (Status);
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
   rpc Upload(UploadRequest) returns (Status);
   rpc Download(DownloadRequest) returns (DownloadResponse);
-  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+}
+
+service NodeService {
+  rpc GetFile(DownloadRequest) returns (DownloadResponse);
 }

@@ -4,6 +4,7 @@ import threading
 import random
 import hashlib
 import grpc
+from concurrent import futures
 import storage_pb2
 import storage_pb2_grpc
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ class FileTransfer:
     status: TransferStatus = TransferStatus.PENDING
     created_at: float = time.time()
     completed_at: Optional[float] = None
+    upload_timestamp: float = 0.0
 
 class HeartbeatSender(threading.Thread):
     def __init__(self, node_id: str, stub, interval: float = 2):
@@ -58,6 +60,31 @@ class HeartbeatSender(threading.Thread):
     def stop(self):
         self.running = False
 
+class NodeServicer(storage_pb2_grpc.NodeServiceServicer):
+    def __init__(self, node):
+        self.node = node
+
+    def GetFile(self, request, context):
+        file_id = request.file_id
+        print(f"[Node {self.node.node_id}] GetFile request for {file_id}")
+        if file_id in self.node.stored_files:
+            transfer = self.node.stored_files[file_id]
+            return storage_pb2.DownloadResponse(
+                file=storage_pb2.FileInfo(
+                    file_id=file_id,
+                    file_name=transfer.file_name,
+                    total_size=transfer.total_size,
+                    chunks=[storage_pb2.FileChunk(
+                        chunk_id=c.chunk_id,
+                        size=c.size,
+                        checksum=c.checksum
+                    ) for c in transfer.chunks],
+                    upload_timestamp=transfer.upload_timestamp
+                ),
+                error=''
+            )
+        return storage_pb2.DownloadResponse(file=None, error='File not found')
+
 class StorageVirtualNode:
     def __init__(
         self,
@@ -65,7 +92,7 @@ class StorageVirtualNode:
         cpu_capacity: int,
         memory_capacity: int,
         storage_capacity: int,
-        bandwidth: float,  # Now in MB/s
+        bandwidth: float,  # in MB/s
         network_host: str = 'localhost',
         network_port: int = 5000
     ):
@@ -81,7 +108,19 @@ class StorageVirtualNode:
         self.used_storage = 0
         self.stored_files = {}  # dict[str, FileTransfer]
 
-        # gRPC setup
+        # gRPC server for node
+        self.server_port = random.randint(5001, 9999)
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=5))
+        storage_pb2_grpc.add_NodeServiceServicer_to_server(NodeServicer(self), self.server)
+        try:
+            self.server.add_insecure_port(f'0.0.0.0:{self.server_port}')
+            self.server.start()
+            print(f"[Node {self.node_id}] gRPC server started on port {self.server_port}")
+        except Exception as e:
+            print(f"[Node {self.node_id}] Failed to start gRPC server: {e}")
+            raise
+
+        # gRPC client setup for controller
         self.channel = grpc.insecure_channel(f'{self.network_host}:{self.network_port}')
         self.stub = storage_pb2_grpc.StorageServiceStub(self.channel)
 
@@ -99,9 +138,9 @@ class StorageVirtualNode:
             'cpu': self.cpu_capacity,
             'memory': self.memory_capacity * 1024 ** 3,
             'storage': self.total_storage,
-            'bandwidth': int(self.bandwidth)  # Convert to int for gRPC
+            'bandwidth': int(self.bandwidth)
         }
-        request = storage_pb2.NodeInfo(node_id=self.node_id, host='localhost', port=0, capacity=capacity)
+        request = storage_pb2.NodeInfo(node_id=self.node_id, host='localhost', port=self.server_port, capacity=capacity)
         try:
             response = self.stub.Register(request)
             if not response.success:
@@ -157,13 +196,14 @@ class StorageVirtualNode:
                 stored_node=self.node_id
             ) for c in file_info.chunks],
             status=TransferStatus.COMPLETED,
-            completed_at=time.time()
+            completed_at=time.time(),
+            upload_timestamp=file_info.upload_timestamp
         )
         self.stored_files[file_info.file_id] = transfer
         self.used_storage += size
-        # print(f"[Node {self.node_id}] Received replication for file {file_info.file_id}")
 
     def upload_file(self, file_id: str, file_name: str, size_mb: float):
+        file_id = f"{self.node_id}:{file_id}"  # Prefix with node_id to ensure uniqueness
         size = int(size_mb * 1024 ** 2)  # Convert MB to bytes
         if self.used_storage + size > self.total_storage:
             print(f"[Node {self.node_id}] Insufficient storage for upload")
@@ -173,9 +213,10 @@ class StorageVirtualNode:
             file_id=file_id,
             file_name=file_name,
             total_size=size,
-            chunks=[storage_pb2.FileChunk(chunk_id=c.chunk_id, size=c.size, checksum=c.checksum) for c in chunks]
+            chunks=[storage_pb2.FileChunk(chunk_id=c.chunk_id, size=c.size, checksum=c.checksum) for c in chunks],
+            upload_timestamp=time.time()
         )
-        transfer_time = size_mb / (self.bandwidth / (1024 ** 2)) if self.bandwidth > 0 else 0  # MB / (MB/s) = seconds
+        transfer_time = size_mb / (self.bandwidth / (1024 ** 2)) if self.bandwidth > 0 else 0
         print(f"[Node {self.node_id}] Simulating upload transfer...")
         time.sleep(transfer_time)
         try:
@@ -196,11 +237,11 @@ class StorageVirtualNode:
                 return
             file = response.file
             size = file.total_size
-            size_mb = size / (1024 ** 2)  # Convert bytes to MB
+            size_mb = size / (1024 ** 2)
             if self.used_storage + size > self.total_storage:
                 print(f"[Node {self.node_id}] Insufficient storage for download")
                 return
-            transfer_time = size_mb / (self.bandwidth / (1024 ** 2)) if self.bandwidth > 0 else 0  # MB / (MB/s) = seconds
+            transfer_time = size_mb / (self.bandwidth / (1024 ** 2)) if self.bandwidth > 0 else 0
             print(f"[Node {self.node_id}] Simulating download transfer...")
             time.sleep(transfer_time)
             self.store_replicated_file(file)
@@ -209,19 +250,18 @@ class StorageVirtualNode:
             print(f"[Node {self.node_id}] Download error: {e}")
 
     def list_files(self):
-        try:
-            response = self.stub.ListFiles(storage_pb2.ListFilesRequest())
-            print(f"[Node {self.node_id}] Available files:")
-            if not response.files:
-                print("No files available")
-            for f in response.files:
-                print(f"- {f.file_id}: {f.file_name} ({f.total_size / (1024 ** 2):.2f} MB)")
-        except grpc.RpcError as e:
-            print(f"[Node {self.node_id}] List error: {e}")
+        print(f"[Node {self.node_id}] Available files:")
+        if not self.stored_files:
+            print("No files available")
+        for file_id, transfer in self.stored_files.items():
+            display_id = file_id.split(':', 1)[1] if ':' in file_id else file_id
+            timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(transfer.upload_timestamp))
+            print(f"- {display_id}: {transfer.file_name} ({transfer.total_size / (1024 ** 2):.2f} MB, uploaded {timestamp})")
 
     def shutdown(self):
         print(f"[Node {self.node_id}] Shutting down...")
         self.heartbeat_sender.stop()
         self.heartbeat_sender.join()
+        self.server.stop(None)
         self.channel.close()
         print(f"[Node {self.node_id}] Shutdown complete")

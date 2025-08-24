@@ -59,11 +59,6 @@ class StorageServiceStub(object):
                 request_serializer=storage__pb2.DownloadRequest.SerializeToString,
                 response_deserializer=storage__pb2.DownloadResponse.FromString,
                 _registered_method=True)
-        self.ListFiles = channel.unary_unary(
-                '/storage.StorageService/ListFiles',
-                request_serializer=storage__pb2.ListFilesRequest.SerializeToString,
-                response_deserializer=storage__pb2.ListFilesResponse.FromString,
-                _registered_method=True)
 
 
 class StorageServiceServicer(object):
@@ -99,12 +94,6 @@ class StorageServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ListFiles(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_StorageServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -132,11 +121,6 @@ def add_StorageServiceServicer_to_server(servicer, server):
                     servicer.Download,
                     request_deserializer=storage__pb2.DownloadRequest.FromString,
                     response_serializer=storage__pb2.DownloadResponse.SerializeToString,
-            ),
-            'ListFiles': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListFiles,
-                    request_deserializer=storage__pb2.ListFilesRequest.FromString,
-                    response_serializer=storage__pb2.ListFilesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -284,8 +268,53 @@ class StorageService(object):
             metadata,
             _registered_method=True)
 
+
+class NodeServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.GetFile = channel.unary_unary(
+                '/storage.NodeService/GetFile',
+                request_serializer=storage__pb2.DownloadRequest.SerializeToString,
+                response_deserializer=storage__pb2.DownloadResponse.FromString,
+                _registered_method=True)
+
+
+class NodeServiceServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def GetFile(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_NodeServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'GetFile': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetFile,
+                    request_deserializer=storage__pb2.DownloadRequest.FromString,
+                    response_serializer=storage__pb2.DownloadResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'storage.NodeService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('storage.NodeService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class NodeService(object):
+    """Missing associated documentation comment in .proto file."""
+
     @staticmethod
-    def ListFiles(request,
+    def GetFile(request,
             target,
             options=(),
             channel_credentials=None,
@@ -298,9 +327,9 @@ class StorageService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/storage.StorageService/ListFiles',
-            storage__pb2.ListFilesRequest.SerializeToString,
-            storage__pb2.ListFilesResponse.FromString,
+            '/storage.NodeService/GetFile',
+            storage__pb2.DownloadRequest.SerializeToString,
+            storage__pb2.DownloadResponse.FromString,
             options,
             channel_credentials,
             insecure,

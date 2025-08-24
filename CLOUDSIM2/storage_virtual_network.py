@@ -11,12 +11,12 @@ class NetworkController(threading.Thread):
         super().__init__(daemon=True)
         self.host = host
         self.port = port
-        self.nodes = {}
+        self.nodes = {}  # node_id -> {host, port, capacity, last_seen, status}
+        self.file_metadata = {}  # file_id -> {name, size, upload_timestamp, replica_nodes}
         self.lock = threading.Lock()
         self.running = False
         self.heartbeat_timeout = 5
-        self.stored_files = {}  # dict[str, FileInfo]
-        self.pending_replications = defaultdict(list)  # dict[str, list[FileInfo]]
+        self.pending_replications = defaultdict(list)  # node_id -> list[FileInfo]
 
     def run(self):
         self.running = True
@@ -98,27 +98,52 @@ class StorageServicer(storage_pb2_grpc.StorageServiceServicer):
         file = request.file
         file_id = file.file_id
         with self.controller.lock:
-            if file_id in self.controller.stored_files:
+            if file_id in self.controller.file_metadata:
                 return storage_pb2.Status(message='File already exists', success=False)
-            self.controller.stored_files[file_id] = file
-            print(f"[Network] Uploaded file {file_id}")
-            for n_id in list(self.controller.nodes.keys()):
-                if self.controller.nodes[n_id]['status'] == 'active':
-                    self.controller.pending_replications[n_id].append(file)
+            self.controller.file_metadata[file_id] = {
+                'name': file.file_name,
+                'size': file.total_size,
+                'upload_timestamp': file.upload_timestamp,
+                'replica_nodes': [n for n in self.controller.nodes if n != file_id.split(':')[0] and self.controller.nodes[n]['status'] == 'active']
+            }
+            print(f"[Network] Uploaded file {file_id} from {file_id.split(':')[0]}, replicating to {self.controller.file_metadata[file_id]['replica_nodes']}")
+            for n_id in self.controller.file_metadata[file_id]['replica_nodes']:
+                self.controller.pending_replications[n_id].append(file)
         return storage_pb2.Status(message='OK', success=True)
 
     def Download(self, request, context):
-        file_id = request.file_id
+        user_file_id = request.file_id
         with self.controller.lock:
-            if file_id in self.controller.stored_files:
-                return storage_pb2.DownloadResponse(file=self.controller.stored_files[file_id], error='')
-            else:
+            # Search for file_id matching the user-provided id (suffix after ':')
+            target_file_id = None
+            for fid in self.controller.file_metadata:
+                if fid.endswith(f":{user_file_id}") or fid == user_file_id:  # Match suffix or exact id
+                    target_file_id = fid
+                    break
+            if not target_file_id:
+                print(f"[Network] Download failed: {user_file_id} not in file_metadata")
                 return storage_pb2.DownloadResponse(file=None, error='File not found')
-
-    def ListFiles(self, request, context):
-        with self.controller.lock:
-            files = [storage_pb2.FileSummary(file_id=k, file_name=v.file_name, total_size=v.total_size) for k, v in self.controller.stored_files.items()]
-        return storage_pb2.ListFilesResponse(files=files)
+            
+            uploader_id = target_file_id.split(':')[0]
+            candidates = [uploader_id] + self.controller.file_metadata[target_file_id]['replica_nodes']
+            for node_id in candidates:
+                if node_id in self.controller.nodes and self.controller.nodes[node_id]['status'] == 'active':
+                    try:
+                        channel_str = f"{self.controller.nodes[node_id]['host']}:{self.controller.nodes[node_id]['port']}"
+                        print(f"[Network] Attempting to fetch {target_file_id} from {node_id} at {channel_str}")
+                        with grpc.insecure_channel(channel_str) as channel:
+                            stub = storage_pb2_grpc.NodeServiceStub(channel)
+                            response = stub.GetFile(storage_pb2.DownloadRequest(file_id=target_file_id))
+                            if response.error:
+                                print(f"[Network] GetFile from {node_id} failed: {response.error}")
+                                continue
+                            print(f"[Network] Successfully fetched {target_file_id} from {node_id}")
+                            return storage_pb2.DownloadResponse(file=response.file, error='')
+                    except grpc.RpcError as e:
+                        print(f"[Network] gRPC error fetching {target_file_id} from {node_id}: {e}")
+                        continue
+            print(f"[Network] Download failed: No active nodes with {target_file_id}")
+            return storage_pb2.DownloadResponse(file=None, error='File not found')
 
 class StorageVirtualNetwork:
     def __init__(self, host: str = '0.0.0.0', port: int = 5000):
