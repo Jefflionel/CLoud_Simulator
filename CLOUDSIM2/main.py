@@ -12,23 +12,23 @@ def run_node(node_id, cpu, memory, storage, bandwidth, network_host, network_por
             cpu_capacity=cpu,
             memory_capacity=memory,
             storage_capacity=storage,
-            bandwidth=bandwidth,
+            bandwidth=bandwidth,  # MB/s
             network_host=network_host,
             network_port=network_port
         )
-        print(f"Node {node_id} running. Commands: upload <file_id> <file_name> <size_bytes>, download <file_id>, list")
+        print(f"Node {node_id} running. Commands: upload <file_id> <file_name> <size_mb>, download <file_id>, list")
         while True:
             try:
                 cmd = input("> ")
                 if not cmd.strip():
                     continue
-                parts = cmd.split()
+                parts = cmd.split(maxsplit=3)
                 cmd_type = parts[0].lower()
                 if cmd_type == 'upload':
                     if len(parts) != 4:
-                        print("Usage: upload <file_id> <file_name> <size_bytes>")
+                        print("Usage: upload <file_id> <file_name> <size_mb>")
                         continue
-                    node.upload_file(parts[1], parts[2], int(parts[3]))
+                    node.upload_file(parts[1], parts[2], float(parts[3]))
                 elif cmd_type == 'download':
                     if len(parts) != 2:
                         print("Usage: download <file_id>")
@@ -39,7 +39,7 @@ def run_node(node_id, cpu, memory, storage, bandwidth, network_host, network_por
                 else:
                     print("Unknown command")
             except ValueError:
-                print("Invalid input (size must be integer)")
+                print("Invalid input (size must be a number)")
             except Exception as e:
                 print(f"Command error: {e}")
     except KeyboardInterrupt:
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--cpu', type=int, default=4, help='CPU capacity')
     parser.add_argument('--memory', type=int, default=16, help='Memory capacity (GB)')
     parser.add_argument('--storage', type=int, default=500, help='Storage capacity (GB)')
-    parser.add_argument('--bandwidth', type=int, default=1000, help='Bandwidth (Mbps)')
+    parser.add_argument('--bandwidth', type=float, default=1000, help='Bandwidth (MB/s)')
     parser.add_argument('--network-host', type=str, default='localhost', help='Network controller host')
     parser.add_argument('--network-port', type=int, default=5000, help='Network controller port')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Host to bind to (for network)')
