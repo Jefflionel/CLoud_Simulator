@@ -50,6 +50,25 @@ message DownloadResponse {
   string error = 2;
 }
 
+message FileSummary {
+  string file_id = 1;
+  string file_name = 2;
+  int64 total_size = 3;
+  double upload_timestamp = 4;
+}
+
+message ListFilesRequest {}  // Empty placeholder for ListFiles
+message GetStorageMetricsRequest {}  // Empty placeholder for GetStorageMetrics
+
+message ListFilesResponse {
+  repeated FileSummary files = 1;
+}
+
+message StorageMetricsResponse {
+  int64 used_storage = 1;
+  int64 total_storage = 2;
+}
+
 service StorageService {
   rpc Register(NodeInfo) returns (Status);
   rpc ActiveNotification(HeartbeatRequest) returns (Status);
@@ -60,4 +79,6 @@ service StorageService {
 
 service NodeService {
   rpc GetFile(DownloadRequest) returns (DownloadResponse);
+  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+  rpc GetStorageMetrics(GetStorageMetricsRequest) returns (StorageMetricsResponse);
 }

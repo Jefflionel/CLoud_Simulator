@@ -12,7 +12,7 @@ def run_node(node_id, cpu, memory, storage, bandwidth, network_host, network_por
             cpu_capacity=cpu,
             memory_capacity=memory,
             storage_capacity=storage,
-            bandwidth=bandwidth,  # MB/s
+            bandwidth=bandwidth,
             network_host=network_host,
             network_port=network_port
         )
@@ -47,10 +47,10 @@ def run_node(node_id, cpu, memory, storage, bandwidth, network_host, network_por
     except Exception as e:
         print(f"Node startup failed: {e}")
 
-def run_network(host, port):
+def run_network(host, port, api_port):
     try:
         print("Starting network controller...")
-        network = StorageVirtualNetwork(host=host, port=port)
+        network = StorageVirtualNetwork(host=host, port=port, api_port=api_port)
         print(f"Network controller running on {host}:{port}. Press Ctrl+C to stop.")
         while True:
             time.sleep(1)
@@ -71,11 +71,12 @@ if __name__ == "__main__":
     parser.add_argument('--network-host', type=str, default='localhost', help='Network controller host')
     parser.add_argument('--network-port', type=int, default=5000, help='Network controller port')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Host to bind to (for network)')
+    parser.add_argument('--api-port', type=int, default=8000, help='API port for FastAPI (default 8000)')
     
     args = parser.parse_args()
     
     if args.network:
-        run_network(args.host, args.network_port)
+        run_network(args.host, args.network_port, args.api_port)
     elif args.node and args.node_id:
         run_node(
             args.node_id, 

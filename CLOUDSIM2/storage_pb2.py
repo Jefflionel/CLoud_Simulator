@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rstorage.proto\x12\x07storage\"\x9b\x01\n\x08NodeInfo\x12\x0f\n\x07node_id\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\x12\x0c\n\x04port\x18\x03 \x01(\x05\x12\x31\n\x08\x63\x61pacity\x18\x04 \x03(\x0b\x32\x1f.storage.NodeInfo.CapacityEntry\x1a/\n\rCapacityEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x03:\x02\x38\x01\"*\n\x06Status\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\"#\n\x10HeartbeatRequest\x12\x0f\n\x07node_id\x18\x01 \x01(\t\"T\n\x11HeartbeatResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12/\n\x14pending_replications\x18\x02 \x03(\x0b\x32\x11.storage.FileInfo\"\x80\x01\n\x08\x46ileInfo\x12\x0f\n\x07\x66ile_id\x18\x01 \x01(\t\x12\x11\n\tfile_name\x18\x02 \x01(\t\x12\x12\n\ntotal_size\x18\x03 \x01(\x03\x12\"\n\x06\x63hunks\x18\x04 \x03(\x0b\x32\x12.storage.FileChunk\x12\x18\n\x10upload_timestamp\x18\x05 \x01(\x01\"=\n\tFileChunk\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\x05\x12\x0c\n\x04size\x18\x02 \x01(\x05\x12\x10\n\x08\x63hecksum\x18\x03 \x01(\t\"0\n\rUploadRequest\x12\x1f\n\x04\x66ile\x18\x01 \x01(\x0b\x32\x11.storage.FileInfo\"\"\n\x0f\x44ownloadRequest\x12\x0f\n\x07\x66ile_id\x18\x01 \x01(\t\"B\n\x10\x44ownloadResponse\x12\x1f\n\x04\x66ile\x18\x01 \x01(\x0b\x32\x11.storage.FileInfo\x12\r\n\x05\x65rror\x18\x02 \x01(\t2\xba\x02\n\x0eStorageService\x12.\n\x08Register\x12\x11.storage.NodeInfo\x1a\x0f.storage.Status\x12@\n\x12\x41\x63tiveNotification\x12\x19.storage.HeartbeatRequest\x1a\x0f.storage.Status\x12\x42\n\tHeartbeat\x12\x19.storage.HeartbeatRequest\x1a\x1a.storage.HeartbeatResponse\x12\x31\n\x06Upload\x12\x16.storage.UploadRequest\x1a\x0f.storage.Status\x12?\n\x08\x44ownload\x12\x18.storage.DownloadRequest\x1a\x19.storage.DownloadResponse2M\n\x0bNodeService\x12>\n\x07GetFile\x12\x18.storage.DownloadRequest\x1a\x19.storage.DownloadResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rstorage.proto\x12\x07storage\"\x9b\x01\n\x08NodeInfo\x12\x0f\n\x07node_id\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\x12\x0c\n\x04port\x18\x03 \x01(\x05\x12\x31\n\x08\x63\x61pacity\x18\x04 \x03(\x0b\x32\x1f.storage.NodeInfo.CapacityEntry\x1a/\n\rCapacityEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x03:\x02\x38\x01\"*\n\x06Status\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\"#\n\x10HeartbeatRequest\x12\x0f\n\x07node_id\x18\x01 \x01(\t\"T\n\x11HeartbeatResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12/\n\x14pending_replications\x18\x02 \x03(\x0b\x32\x11.storage.FileInfo\"\x80\x01\n\x08\x46ileInfo\x12\x0f\n\x07\x66ile_id\x18\x01 \x01(\t\x12\x11\n\tfile_name\x18\x02 \x01(\t\x12\x12\n\ntotal_size\x18\x03 \x01(\x03\x12\"\n\x06\x63hunks\x18\x04 \x03(\x0b\x32\x12.storage.FileChunk\x12\x18\n\x10upload_timestamp\x18\x05 \x01(\x01\"=\n\tFileChunk\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\x05\x12\x0c\n\x04size\x18\x02 \x01(\x05\x12\x10\n\x08\x63hecksum\x18\x03 \x01(\t\"0\n\rUploadRequest\x12\x1f\n\x04\x66ile\x18\x01 \x01(\x0b\x32\x11.storage.FileInfo\"\"\n\x0f\x44ownloadRequest\x12\x0f\n\x07\x66ile_id\x18\x01 \x01(\t\"B\n\x10\x44ownloadResponse\x12\x1f\n\x04\x66ile\x18\x01 \x01(\x0b\x32\x11.storage.FileInfo\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"_\n\x0b\x46ileSummary\x12\x0f\n\x07\x66ile_id\x18\x01 \x01(\t\x12\x11\n\tfile_name\x18\x02 \x01(\t\x12\x12\n\ntotal_size\x18\x03 \x01(\x03\x12\x18\n\x10upload_timestamp\x18\x04 \x01(\x01\"\x12\n\x10ListFilesRequest\"\x1a\n\x18GetStorageMetricsRequest\"8\n\x11ListFilesResponse\x12#\n\x05\x66iles\x18\x01 \x03(\x0b\x32\x14.storage.FileSummary\"E\n\x16StorageMetricsResponse\x12\x14\n\x0cused_storage\x18\x01 \x01(\x03\x12\x15\n\rtotal_storage\x18\x02 \x01(\x03\x32\xba\x02\n\x0eStorageService\x12.\n\x08Register\x12\x11.storage.NodeInfo\x1a\x0f.storage.Status\x12@\n\x12\x41\x63tiveNotification\x12\x19.storage.HeartbeatRequest\x1a\x0f.storage.Status\x12\x42\n\tHeartbeat\x12\x19.storage.HeartbeatRequest\x1a\x1a.storage.HeartbeatResponse\x12\x31\n\x06Upload\x12\x16.storage.UploadRequest\x1a\x0f.storage.Status\x12?\n\x08\x44ownload\x12\x18.storage.DownloadRequest\x1a\x19.storage.DownloadResponse2\xea\x01\n\x0bNodeService\x12>\n\x07GetFile\x12\x18.storage.DownloadRequest\x1a\x19.storage.DownloadResponse\x12\x42\n\tListFiles\x12\x19.storage.ListFilesRequest\x1a\x1a.storage.ListFilesResponse\x12W\n\x11GetStorageMetrics\x12!.storage.GetStorageMetricsRequest\x1a\x1f.storage.StorageMetricsResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -53,8 +53,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_DOWNLOADREQUEST']._serialized_end=629
   _globals['_DOWNLOADRESPONSE']._serialized_start=631
   _globals['_DOWNLOADRESPONSE']._serialized_end=697
-  _globals['_STORAGESERVICE']._serialized_start=700
-  _globals['_STORAGESERVICE']._serialized_end=1014
-  _globals['_NODESERVICE']._serialized_start=1016
-  _globals['_NODESERVICE']._serialized_end=1093
+  _globals['_FILESUMMARY']._serialized_start=699
+  _globals['_FILESUMMARY']._serialized_end=794
+  _globals['_LISTFILESREQUEST']._serialized_start=796
+  _globals['_LISTFILESREQUEST']._serialized_end=814
+  _globals['_GETSTORAGEMETRICSREQUEST']._serialized_start=816
+  _globals['_GETSTORAGEMETRICSREQUEST']._serialized_end=842
+  _globals['_LISTFILESRESPONSE']._serialized_start=844
+  _globals['_LISTFILESRESPONSE']._serialized_end=900
+  _globals['_STORAGEMETRICSRESPONSE']._serialized_start=902
+  _globals['_STORAGEMETRICSRESPONSE']._serialized_end=971
+  _globals['_STORAGESERVICE']._serialized_start=974
+  _globals['_STORAGESERVICE']._serialized_end=1288
+  _globals['_NODESERVICE']._serialized_start=1291
+  _globals['_NODESERVICE']._serialized_end=1525
 # @@protoc_insertion_point(module_scope)

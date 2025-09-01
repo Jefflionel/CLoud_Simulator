@@ -85,6 +85,23 @@ class NodeServicer(storage_pb2_grpc.NodeServiceServicer):
             )
         return storage_pb2.DownloadResponse(file=None, error='File not found')
 
+    def ListFiles(self, request, context):
+        summaries = []
+        for file_id, transfer in self.node.stored_files.items():
+            summaries.append(storage_pb2.FileSummary(
+                file_id=file_id,
+                file_name=transfer.file_name,
+                total_size=transfer.total_size,
+                upload_timestamp=transfer.upload_timestamp
+            ))
+        return storage_pb2.ListFilesResponse(files=summaries)
+
+    def GetStorageMetrics(self, request, context):
+        return storage_pb2.StorageMetricsResponse(
+            used_storage=self.node.used_storage,
+            total_storage=self.node.total_storage
+        )
+
 class StorageVirtualNode:
     def __init__(
         self,

@@ -283,12 +283,34 @@ class NodeServiceStub(object):
                 request_serializer=storage__pb2.DownloadRequest.SerializeToString,
                 response_deserializer=storage__pb2.DownloadResponse.FromString,
                 _registered_method=True)
+        self.ListFiles = channel.unary_unary(
+                '/storage.NodeService/ListFiles',
+                request_serializer=storage__pb2.ListFilesRequest.SerializeToString,
+                response_deserializer=storage__pb2.ListFilesResponse.FromString,
+                _registered_method=True)
+        self.GetStorageMetrics = channel.unary_unary(
+                '/storage.NodeService/GetStorageMetrics',
+                request_serializer=storage__pb2.GetStorageMetricsRequest.SerializeToString,
+                response_deserializer=storage__pb2.StorageMetricsResponse.FromString,
+                _registered_method=True)
 
 
 class NodeServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetFile(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListFiles(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetStorageMetrics(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -301,6 +323,16 @@ def add_NodeServiceServicer_to_server(servicer, server):
                     servicer.GetFile,
                     request_deserializer=storage__pb2.DownloadRequest.FromString,
                     response_serializer=storage__pb2.DownloadResponse.SerializeToString,
+            ),
+            'ListFiles': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListFiles,
+                    request_deserializer=storage__pb2.ListFilesRequest.FromString,
+                    response_serializer=storage__pb2.ListFilesResponse.SerializeToString,
+            ),
+            'GetStorageMetrics': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetStorageMetrics,
+                    request_deserializer=storage__pb2.GetStorageMetricsRequest.FromString,
+                    response_serializer=storage__pb2.StorageMetricsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -330,6 +362,60 @@ class NodeService(object):
             '/storage.NodeService/GetFile',
             storage__pb2.DownloadRequest.SerializeToString,
             storage__pb2.DownloadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListFiles(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/storage.NodeService/ListFiles',
+            storage__pb2.ListFilesRequest.SerializeToString,
+            storage__pb2.ListFilesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetStorageMetrics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/storage.NodeService/GetStorageMetrics',
+            storage__pb2.GetStorageMetricsRequest.SerializeToString,
+            storage__pb2.StorageMetricsResponse.FromString,
             options,
             channel_credentials,
             insecure,
